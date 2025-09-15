@@ -1,0 +1,40 @@
+# Test Configuration
+server:
+  port: 0  # Random port for tests
+
+spring:
+  application:
+    name: github-firebase-connector-test
+
+# GitHub API Configuration for Tests
+github:
+  token: test-token
+  api-url: https://api.github.com
+  timeout: 30s
+  retry:
+    max-attempts: 3
+    backoff-delay: 1s
+  rate-limit:
+    requests-per-hour: 5000
+    burst-capacity: 100
+
+# Firebase Configuration for Tests
+firebase:
+  service-account-path: /test/path/service-account.json
+  project-id: test-project-id
+  collection-name: github_issues
+  connection-pool:
+    max-connections: 50
+    connection-timeout: 10s
+
+# Synchronization Configuration for Tests
+sync:
+  default-issue-limit: 5
+  batch-size: 10
+  schedule: "0 */15 * * * *"
+
+# Logging Configuration for Tests
+logging:
+  level:
+    com.company.connector: DEBUG
+    org.springframework.test: DEBUG

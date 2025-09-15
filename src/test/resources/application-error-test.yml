@@ -1,0 +1,54 @@
+# Error Handling Test Configuration
+server:
+  port: 0  # Random port for tests
+
+spring:
+  application:
+    name: github-firebase-connector-error-test
+  main:
+    allow-bean-definition-overriding: true
+
+# GitHub API Configuration for Error Tests
+github:
+  token: test-token
+  api-url: http://localhost:8080  # Will be overridden by @DynamicPropertySource
+  timeout: 5s
+  retry:
+    max-attempts: 3
+    backoff-delay: 100ms
+  rate-limit:
+    requests-per-hour: 5000
+    burst-capacity: 100
+
+# Firebase Configuration for Error Tests
+firebase:
+  service-account-path: /test/path/service-account.json
+  project-id: test-project
+  collection-name: github_issues_error
+  connection-pool:
+    max-connections: 50
+    connection-timeout: 10s
+  use-emulator: true
+  emulator:
+    host: localhost:8080  # Will be overridden by @DynamicPropertySource
+
+# Synchronization Configuration for Error Tests
+sync:
+  default-issue-limit: 5
+  batch-size: 10
+  schedule: "0 */15 * * * *"
+
+# Cache Configuration for Error Tests
+spring:
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=15m
+
+# Logging Configuration for Error Tests
+logging:
+  level:
+    com.company.connector: DEBUG
+    org.springframework.test: INFO
+    org.testcontainers: INFO
+    com.github.tomakehurst.wiremock: WARN

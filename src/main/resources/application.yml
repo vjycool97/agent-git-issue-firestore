@@ -1,0 +1,122 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: github-firebase-connector
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:development}
+
+# GitHub API Configuration
+github:
+  token: ${GITHUB_TOKEN:}
+  api-url: https://api.github.com
+  timeout: 30s
+  retry:
+    max-attempts: 3
+    backoff-delay: 1s
+  rate-limit:
+    requests-per-hour: 5000
+    burst-capacity: 100
+
+# Firebase Configuration
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:}
+  project-id: ${FIREBASE_PROJECT_ID:}
+  collection-name: github_issues
+  connection-pool:
+    max-connections: 50
+    connection-timeout: 10s
+
+# Synchronization Configuration
+sync:
+  default-issue-limit: 5
+  batch-size: 10
+  schedule: "0 */15 * * * *"  # Every 15 minutes
+
+connector:
+  pipeline:
+    transformations:
+      - id: "github-to-firestore"
+        type: "github-firestore"
+        inputType: "com.company.connector.model.GitHubIssue"
+        outputType: "com.company.connector.model.FirestoreIssueDocument"
+        priority: 100
+        enabled: true
+        settings:
+          validateFields: true
+          addTimestamp: true
+    outputs:
+      - type: "firestore"
+        dataType: "com.company.connector.model.FirestoreIssueDocument"
+        enabled: true
+        settings:
+          collection: "github_issues"
+          batchSize: 10
+    globalSettings:
+      enableHealthChecks: true
+      shutdownTimeout: 30
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+    metrics:
+      enabled: true
+  health:
+    defaults:
+      enabled: true
+  metrics:
+    export:
+      simple:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${spring.profiles.active}
+
+# Logging Configuration
+logging:
+  level:
+    com.company.connector: INFO
+    org.springframework.web: WARN
+    org.springframework.boot.actuator: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level [%X{correlationId:-}] %logger{36} - %msg%n"
+  file:
+    name: logs/github-firebase-connector.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 30
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: development
+
+logging:
+  level:
+    com.company.connector: DEBUG
+    org.springframework.web.client: DEBUG
+
+---
+# Test Profile  
+spring:
+  config:
+    activate:
+      on-profile: test
+
+logging:
+  level:
+    com.company.connector: DEBUG
+    org.springframework.test: DEBUG

@@ -1,0 +1,69 @@
+# Docker-specific configuration
+server:
+  port: 8080
+
+spring:
+  application:
+    name: github-firebase-connector
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=${CACHE_MAX_SIZE:10000},expireAfterWrite=${CACHE_EXPIRE_AFTER_WRITE:30m}
+
+# GitHub API Configuration for Docker
+github:
+  token: ${GITHUB_TOKEN}
+  api-url: https://api.github.com
+  timeout: 30s
+  retry:
+    max-attempts: 3
+    backoff-delay: 1s
+  rate-limit:
+    requests-per-hour: 5000
+    burst-capacity: 100
+
+# Firebase Configuration for Docker
+firebase:
+  service-account-path: ${FIREBASE_SERVICE_ACCOUNT_PATH:/app/config/service-account.json}
+  project-id: ${FIREBASE_PROJECT_ID}
+  collection-name: github_issues
+  connection-pool:
+    max-connections: 50
+    connection-timeout: 10s
+  use-emulator: ${FIREBASE_USE_EMULATOR:false}
+  emulator:
+    host: ${FIREBASE_EMULATOR_HOST:localhost:8081}
+
+# Synchronization Configuration for Docker
+sync:
+  default-issue-limit: ${SYNC_DEFAULT_ISSUE_LIMIT:10}
+  batch-size: ${SYNC_BATCH_SIZE:20}
+  schedule: ${SYNC_SCHEDULE:0 */15 * * * *}
+
+# Actuator Configuration for Docker
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+# Logging Configuration for Docker
+logging:
+  level:
+    com.company.connector: ${LOG_LEVEL:INFO}
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /app/logs/application.log
+    max-size: 100MB
+    max-history: 10
